@@ -125,7 +125,7 @@ class ContextLossTest1 extends FunctionalTest
 	}
 
 	// Event Handlers
-	private function application_onUpdate(deltaTime:Int):Void
+	private function application_onUpdate(deltaTime:Float):Void
 	{
 		// Event.ENTER_FRAME stops dispatching when context is lost
 
