@@ -2364,7 +2364,16 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 		}
 
 		__setTransformDirty();
-		__objectTransform.matrix = value.matrix;
+
+		if (value.__hasMatrix)
+		{
+			var other = value.__displayObject.__transform;
+			__objectTransform.__setTransform(other.a, other.b, other.c, other.d, other.tx, other.ty);
+		}
+		else
+		{
+			__objectTransform.__hasMatrix = false;
+		}
 
 		if (!__objectTransform.__colorTransform.__equals(value.__colorTransform, true)
 			|| (!cacheAsBitmap && __objectTransform.__colorTransform.alphaMultiplier != value.__colorTransform.alphaMultiplier))
@@ -2426,6 +2435,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 
 	@:keep @:noCompletion private function set_x(value:Float):Float
 	{
+		if (value != value) value = 0.0; // flash converts NaN to 0.0
 		if (value != __transform.tx) __setTransformDirty();
 		return __transform.tx = value;
 	}
@@ -2437,6 +2447,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 
 	@:keep @:noCompletion private function set_y(value:Float):Float
 	{
+		if (value != value) value = 0.0; // flash converts NaN to 0.0
 		if (value != __transform.ty) __setTransformDirty();
 		return __transform.ty = value;
 	}
