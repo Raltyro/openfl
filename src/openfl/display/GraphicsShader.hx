@@ -8,16 +8,16 @@ import openfl.utils.ByteArray;
 #end
 class GraphicsShader extends Shader
 {
-	@:glVertexHeader("attribute float openfl_Alpha;
-		attribute vec4 openfl_ColorMultiplier;
-		attribute vec4 openfl_ColorOffset;
-		attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexHeader("in float openfl_Alpha;
+		in vec4 openfl_ColorMultiplier;
+		in vec4 openfl_ColorOffset;
+		in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 
-		varying float openfl_Alphav;
-		varying vec4 openfl_ColorMultiplierv;
-		varying vec4 openfl_ColorOffsetv;
-		varying vec2 openfl_TextureCoordv;
+		out float openfl_Alphav;
+		out vec4 openfl_ColorMultiplierv;
+		out vec4 openfl_ColorOffsetv;
+		out vec2 openfl_TextureCoordv;
 
 		uniform mat4 openfl_Matrix;
 		uniform bool openfl_HasColorTransform;
@@ -25,11 +25,9 @@ class GraphicsShader extends Shader
 	@:glVertexBody("openfl_Alphav = openfl_Alpha;
 		openfl_TextureCoordv = openfl_TextureCoord;
 
-		if (openfl_HasColorTransform) {
-
+		if(openfl_HasColorTransform) {
 			openfl_ColorMultiplierv = openfl_ColorMultiplier;
 			openfl_ColorOffsetv = openfl_ColorOffset / 255.0;
-
 		}
 
 		gl_Position = openfl_Matrix * openfl_Position;")
@@ -40,10 +38,11 @@ class GraphicsShader extends Shader
 			#pragma body
 
 		}")
-	@:glFragmentHeader("varying float openfl_Alphav;
-		varying vec4 openfl_ColorMultiplierv;
-		varying vec4 openfl_ColorOffsetv;
-		varying vec2 openfl_TextureCoordv;
+	@:glFragmentHeader("layout(location = 0) out vec4 ofl_FragColor;
+		in float openfl_Alphav;
+		in vec4 openfl_ColorMultiplierv;
+		in vec4 openfl_ColorOffsetv;
+		in vec2 openfl_TextureCoordv;
 
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
@@ -52,7 +51,7 @@ class GraphicsShader extends Shader
 
 		if (color.a == 0.0) {
 
-			gl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
+			ofl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
 
 		} else if (openfl_HasColorTransform) {
 
@@ -68,17 +67,17 @@ class GraphicsShader extends Shader
 
 			if (color.a > 0.0) {
 
-				gl_FragColor = vec4 (color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
+				ofl_FragColor = vec4 (color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
 
 			} else {
 
-				gl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
+				ofl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
 
 			}
 
 		} else {
 
-			gl_FragColor = color * openfl_Alphav;
+			ofl_FragColor = color * openfl_Alphav;
 
 		}")
 	#if emscripten
@@ -88,7 +87,7 @@ class GraphicsShader extends Shader
 
 			#pragma body
 
-			gl_FragColor = gl_FragColor.bgra;
+			ofl_FragColor = ofl_FragColor.bgra;
 
 		}")
 	#else

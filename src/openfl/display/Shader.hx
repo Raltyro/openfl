@@ -350,7 +350,6 @@ class Shader
 
 		var program = gl.createProgram();
 
-		// Fix support for drivers that don't draw if attribute 0 is disabled
 		for (param in __paramFloat)
 		{
 			if (param.name.indexOf("Position") > -1 && StringTools.startsWith(param.name, "openfl_"))
@@ -475,7 +474,7 @@ class Shader
 			__paramFloat = new Array();
 			__paramInt = new Array();
 
-			__processGLData(glVertexSource, "attribute");
+			__processGLData(glVertexSource, "in");
 			__processGLData(glVertexSource, "uniform");
 			__processGLData(glFragmentSource, "uniform");
 		}
@@ -582,7 +581,7 @@ class Shader
 		}
 		else
 		{
-			regex = ~/attribute ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/;
+			regex = ~/in ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/;
 		}
 
 		while (regex.matchSub(source, lastMatch))
@@ -614,7 +613,7 @@ class Shader
 				}
 
 				Reflect.setField(__data, name, input);
-				if (__isGenerated) Reflect.setField(this, name, input);
+				try{Reflect.setField(this, name, input);} catch(e) {}
 			}
 			else if (!Reflect.hasField(__data, name) || Reflect.field(__data, name) == null)
 			{
@@ -680,7 +679,7 @@ class Shader
 						}
 
 						Reflect.setField(__data, name, parameter);
-						if (__isGenerated) Reflect.setField(this, name, parameter);
+						try{Reflect.setField(this, name, parameter);} catch(e) {}
 
 					case INT, INT2, INT3, INT4:
 						var parameter = new ShaderParameter<Int>();
@@ -692,7 +691,7 @@ class Shader
 						parameter.__length = length;
 						__paramInt.push(parameter);
 						Reflect.setField(__data, name, parameter);
-						if (__isGenerated) Reflect.setField(this, name, parameter);
+						try{Reflect.setField(this, name, parameter);} catch(e) {}
 
 					default:
 						var parameter = new ShaderParameter<Float>();
@@ -723,7 +722,7 @@ class Shader
 						}
 
 						Reflect.setField(__data, name, parameter);
-						if (__isGenerated) Reflect.setField(this, name, parameter);
+						try{Reflect.setField(this, name, parameter);} catch(e) {}
 				}
 			}
 
