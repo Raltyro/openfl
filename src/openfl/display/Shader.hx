@@ -939,11 +939,22 @@ class Shader
 
 	@:noCompletion private function set_glFragmentSource(value:String):String
 	{
+		final replaceKeywords:Map<String, String> = [
+			"gl_FragColor" => "ofl_FragColor" // backwards compat with older shaders
+		];
+		for(k => v in replaceKeywords)
+			value = StringTools.replace(value, k, v);
+
+		final fragColorDef:String = "layout(location = 0) out vec4 ofl_FragColor;";
+		if(!StringTools.contains(value, fragColorDef))
+		{
+			// value = fragColorDef + "\n" + value;
+			Log.warn('Shader may be missing #pragma header!');
+		}
 		if (value != __glFragmentSource)
 		{
 			__glSourceDirty = true;
 		}
-
 		return __glFragmentSource = value;
 	}
 
