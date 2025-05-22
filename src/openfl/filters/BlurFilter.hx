@@ -275,29 +275,29 @@ private class BlurShader extends BitmapFilterShader
 {
 	@:glFragmentSource("uniform sampler2D openfl_Texture;
 
-		varying vec2 vBlurCoords[7];
+		out vec2 vBlurCoords[7];
 
 		void main(void) {
 
 			vec4 sum = vec4(0.0);
-			sum += texture2D(openfl_Texture, vBlurCoords[0]) * 0.00443;
-			sum += texture2D(openfl_Texture, vBlurCoords[1]) * 0.05399;
-			sum += texture2D(openfl_Texture, vBlurCoords[2]) * 0.24197;
-			sum += texture2D(openfl_Texture, vBlurCoords[3]) * 0.39894;
-			sum += texture2D(openfl_Texture, vBlurCoords[4]) * 0.24197;
-			sum += texture2D(openfl_Texture, vBlurCoords[5]) * 0.05399;
-			sum += texture2D(openfl_Texture, vBlurCoords[6]) * 0.00443;
+			sum += texture(openfl_Texture, vBlurCoords[0]) * 0.00443;
+			sum += texture(openfl_Texture, vBlurCoords[1]) * 0.05399;
+			sum += texture(openfl_Texture, vBlurCoords[2]) * 0.24197;
+			sum += texture(openfl_Texture, vBlurCoords[3]) * 0.39894;
+			sum += texture(openfl_Texture, vBlurCoords[4]) * 0.24197;
+			sum += texture(openfl_Texture, vBlurCoords[5]) * 0.05399;
+			sum += texture(openfl_Texture, vBlurCoords[6]) * 0.00443;
 
 			gl_FragColor = sum;
 
 		}")
-	@:glVertexSource("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexSource("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 
 		uniform mat4 openfl_Matrix;
 
 		uniform vec2 uRadius;
-		varying vec2 vBlurCoords[7];
+		out vec2 vBlurCoords[7];
 		uniform vec2 uTextureSize;
 
 		void main(void) {

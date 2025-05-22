@@ -251,7 +251,7 @@ import lime.math.RGBA;
 @SuppressWarnings("checkstyle:FieldDocComment")
 private class ColorMatrixShader extends BitmapFilterShader
 {
-	@:glFragmentSource("varying vec2 openfl_TextureCoordv;
+	@:glFragmentSource("out vec2 openfl_TextureCoordv;
 		uniform sampler2D openfl_Texture;
 
 		uniform mat4 uMultipliers;
@@ -259,7 +259,7 @@ private class ColorMatrixShader extends BitmapFilterShader
 
 		void main(void) {
 
-			vec4 color = texture2D (openfl_Texture, openfl_TextureCoordv);
+			vec4 color = texture (openfl_Texture, openfl_TextureCoordv);
 
 			if (color.a == 0.0) {
 

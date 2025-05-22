@@ -366,7 +366,7 @@ final class NativeVideo extends Bitmap {
 		// AL.sourceQueueBuffers(__alSource, AUDIO_BUFFER_COUNT, __alAudioBuffers);
 		// @:inline
 		// AL.sourcePlay(__alSource);
-	}	
+	}
 
 	@:noCompletion private function __setupThreads():Void {
 		__audioThread = new BackgroundWorker();
@@ -504,24 +504,24 @@ final class NativeVideo extends Bitmap {
 
 	@:noCompletion override private function __enterFrame(deltaTime:Int):Void {
 		super.__enterFrame(deltaTime);
-	
+
 		if (!isPlaying) return;
-	
+
 		var audioPos:Int = Std.int(currentTime * 1000);
 		var videoPos:Int = __videoGetVideoPosition();
 		var diff:Int = audioPos - videoPos;
-	
+
 		if (diff >= 200) {
 			__skipTo(audioPos);
 			return;
 		}
-	
+
 		if (diff < -(__frameDurationMS * 2)) {
 			return;
 		}
-	
+
 		var framesBehind:Int = Std.int(diff / __frameDurationMS);
-	
+
 		if (framesBehind > 1) {
 			if (__isHardware) {
 				__videoGLUpdateFrame();
@@ -529,7 +529,7 @@ final class NativeVideo extends Bitmap {
 				__videoSoftwareUpdateFrame();
 			}
 		}
-	
+
 		__processFrames();
 	}
 
@@ -601,16 +601,16 @@ final class NativeVideo extends Bitmap {
 		// Compute aspect ratios
 		var videoAspect = __videoWidth / __videoHeight;
 		var texAspect = __textureWidth / __textureHeight;
-	
+
 		var sx = 1.0;
 		var sy = 1.0;
-	
+
 		if (videoAspect > texAspect) {
 			sy = texAspect / videoAspect;
 		} else {
 			sx = videoAspect / texAspect;
 		}
-	
+
 		var posData = new Float32Array([
 			-1 * sx, -1 * sy,
 			 1 * sx, -1 * sy,
@@ -619,7 +619,7 @@ final class NativeVideo extends Bitmap {
 		]);
 		__positions = __context.createVertexBuffer(4, 2);
 		__positions.uploadFromTypedArray(posData, 0);
-	
+
 		var uvData = new Float32Array([
 			0, 0,
 			1, 0,
@@ -628,11 +628,11 @@ final class NativeVideo extends Bitmap {
 		]);
 		__uvs = __context.createVertexBuffer(4, 2);
 		__uvs.uploadFromTypedArray(uvData, 0);
-	
+
 		__indices = __context.createIndexBuffer(6);
 		__indices.uploadFromTypedArray(new UInt16Array([0, 1, 2, 2, 1, 3]), 0);
 	}
-	
+
 
 	@:noCompletion private function __createProgram():Void {
 		var vertexShader:String = "attribute vec2 aPosition;
@@ -645,8 +645,8 @@ final class NativeVideo extends Bitmap {
 	}";
 
 		var fragmentShader:String = "
-		uniform sampler2D u_tex0; 
-		uniform sampler2D u_tex1;  
+		uniform sampler2D u_tex0;
+		uniform sampler2D u_tex1;
 
 		varying vec2 vTexCoord;
 
@@ -655,8 +655,8 @@ final class NativeVideo extends Bitmap {
 			// vec2 uvCoord = vec2(vTexCoord.x, 1.0 - vTexCoord.y);
 			vec2 uvCoord = vTexCoord;
 
-			float yRaw = texture2D(u_tex0, uvCoord).r;
-			vec2  uv   = texture2D(u_tex1, uvCoord).rg;
+			float yRaw = texture(u_tex0, uvCoord).r;
+			vec2  uv   = texture(u_tex1, uvCoord).rg;
 
 			float y = clamp((yRaw * 255.0 - 16.0) / 219.0, 0.0, 1.0);
 			float u = (uv.r * 255.0 - 128.0) / 224.0;

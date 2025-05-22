@@ -290,20 +290,20 @@ private class ConvolutionShader extends BitmapFilterShader
 
 		void main(void) {
 
-			vec4 tc = texture2D (openfl_Texture, vBlurCoords[4]);
+			vec4 tc = texture (openfl_Texture, vBlurCoords[4]);
 			vec4 c = vec4 (0.0);
 
-			c += texture2D (openfl_Texture, vBlurCoords[0]) * uConvoMatrix[0][0];
-			c += texture2D (openfl_Texture, vBlurCoords[1]) * uConvoMatrix[0][1];
-			c += texture2D (openfl_Texture, vBlurCoords[2]) * uConvoMatrix[0][2];
+			c += texture (openfl_Texture, vBlurCoords[0]) * uConvoMatrix[0][0];
+			c += texture (openfl_Texture, vBlurCoords[1]) * uConvoMatrix[0][1];
+			c += texture (openfl_Texture, vBlurCoords[2]) * uConvoMatrix[0][2];
 
-			c += texture2D (openfl_Texture, vBlurCoords[3]) * uConvoMatrix[1][0];
+			c += texture (openfl_Texture, vBlurCoords[3]) * uConvoMatrix[1][0];
 			c += tc * uConvoMatrix[1][1];
-			c += texture2D (openfl_Texture, vBlurCoords[5]) * uConvoMatrix[1][2];
+			c += texture (openfl_Texture, vBlurCoords[5]) * uConvoMatrix[1][2];
 
-			c += texture2D (openfl_Texture, vBlurCoords[6]) * uConvoMatrix[2][0];
-			c += texture2D (openfl_Texture, vBlurCoords[7]) * uConvoMatrix[2][1];
-			c += texture2D (openfl_Texture, vBlurCoords[8]) * uConvoMatrix[2][2];
+			c += texture (openfl_Texture, vBlurCoords[6]) * uConvoMatrix[2][0];
+			c += texture (openfl_Texture, vBlurCoords[7]) * uConvoMatrix[2][1];
+			c += texture (openfl_Texture, vBlurCoords[8]) * uConvoMatrix[2][2];
 
 			if (uDivisor > 0.0) {
 

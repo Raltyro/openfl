@@ -9,10 +9,10 @@ import openfl.utils.ByteArray;
 #end
 class BitmapFilterShader extends Shader
 {
-	@:glVertexHeader("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexHeader("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 
-		varying vec2 openfl_TextureCoordv;
+		out vec2 openfl_TextureCoordv;
 
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;")
@@ -26,11 +26,11 @@ class BitmapFilterShader extends Shader
 			#pragma body
 
 		}")
-	@:glFragmentHeader("varying vec2 openfl_TextureCoordv;
+	@:glFragmentHeader("out vec2 openfl_TextureCoordv;
 
 		uniform sampler2D openfl_Texture;
 		uniform vec2 openfl_TextureSize;")
-	@:glFragmentBody("gl_FragColor = texture2D (openfl_Texture, openfl_TextureCoordv);")
+	@:glFragmentBody("gl_FragColor = texture (openfl_Texture, openfl_TextureCoordv);")
 	#if emscripten
 	@:glFragmentSource("#pragma header
 

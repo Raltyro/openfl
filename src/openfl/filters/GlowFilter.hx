@@ -479,18 +479,18 @@ private class InvertAlphaShader extends BitmapFilterShader
 {
 	@:glFragmentSource("
 		uniform sampler2D openfl_Texture;
-		varying vec2 vTexCoord;
+		out vec2 vTexCoord;
 
 		void main(void) {
-			vec4 texel = texture2D(openfl_Texture, vTexCoord);
+			vec4 texel = texture(openfl_Texture, vTexCoord);
 			gl_FragColor = vec4(texel.rgb, 1.0 - texel.a);
 		}
 	")
 	@:glVertexSource("
-		attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+		in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 		uniform mat4 openfl_Matrix;
-		varying vec2 vTexCoord;
+		out vec2 vTexCoord;
 
 		void main(void) {
 			gl_Position = openfl_Matrix * openfl_Position;
@@ -513,23 +513,23 @@ private class BlurAlphaShader extends BitmapFilterShader
 		uniform sampler2D openfl_Texture;
 		uniform vec4 uColor;
 		uniform float uStrength;
-		varying vec2 vTexCoord;
-		varying vec2 vBlurCoords[6];
+		out vec2 vTexCoord;
+		out vec2 vBlurCoords[6];
 
 		void main(void)
 		{
-            vec4 texel = texture2D(openfl_Texture, vTexCoord);
+            vec4 texel = texture(openfl_Texture, vTexCoord);
 
             vec3 contributions = vec3(0.00443, 0.05399, 0.24197);
             vec3 top = vec3(
-                texture2D(openfl_Texture, vBlurCoords[0]).a,
-                texture2D(openfl_Texture, vBlurCoords[1]).a,
-                texture2D(openfl_Texture, vBlurCoords[2]).a
+                texture(openfl_Texture, vBlurCoords[0]).a,
+                texture(openfl_Texture, vBlurCoords[1]).a,
+                texture(openfl_Texture, vBlurCoords[2]).a
             );
             vec3 bottom = vec3(
-                texture2D(openfl_Texture, vBlurCoords[3]).a,
-                texture2D(openfl_Texture, vBlurCoords[4]).a,
-                texture2D(openfl_Texture, vBlurCoords[5]).a
+                texture(openfl_Texture, vBlurCoords[3]).a,
+                texture(openfl_Texture, vBlurCoords[4]).a,
+                texture(openfl_Texture, vBlurCoords[5]).a
             );
 
             float a = texel.a * 0.39894;
@@ -540,15 +540,15 @@ private class BlurAlphaShader extends BitmapFilterShader
 		}
 	")
 	@:glVertexSource("
-		attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+		in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;
 
 		uniform vec2 uRadius;
-		varying vec2 vTexCoord;
-		varying vec2 vBlurCoords[6];
+		out vec2 vTexCoord;
+		out vec2 vBlurCoords[6];
 
 		void main(void) {
 
@@ -585,21 +585,21 @@ private class CombineShader extends BitmapFilterShader
 	@:glFragmentSource("
 		uniform sampler2D openfl_Texture;
 		uniform sampler2D sourceBitmap;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
-			vec4 src = texture2D(sourceBitmap, textureCoords.xy);
-			vec4 glow = texture2D(openfl_Texture, textureCoords.zw);
+			vec4 src = texture(sourceBitmap, textureCoords.xy);
+			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
 			gl_FragColor = src + glow * (1.0 - src.a);
 		}
 	")
-	@:glVertexSource("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexSource("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;
 		uniform vec2 offset;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
 			gl_Position = openfl_Matrix * openfl_Position;
@@ -624,21 +624,21 @@ private class InnerCombineShader extends BitmapFilterShader
 	@:glFragmentSource("
 		uniform sampler2D openfl_Texture;
 		uniform sampler2D sourceBitmap;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
-			vec4 src = texture2D(sourceBitmap, textureCoords.xy);
-			vec4 glow = texture2D(openfl_Texture, textureCoords.zw);
+			vec4 src = texture(sourceBitmap, textureCoords.xy);
+			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
 			gl_FragColor = vec4((src.rgb * (1.0 - glow.a)) + (glow.rgb * src.a), src.a);
 		}
 	")
-	@:glVertexSource("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexSource("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;
 		uniform vec2 offset;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
 			gl_Position = openfl_Matrix * openfl_Position;
@@ -663,21 +663,21 @@ private class CombineKnockoutShader extends BitmapFilterShader
 	@:glFragmentSource("
 		uniform sampler2D openfl_Texture;
 		uniform sampler2D sourceBitmap;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
-			vec4 src = texture2D(sourceBitmap, textureCoords.xy);
-			vec4 glow = texture2D(openfl_Texture, textureCoords.zw);
+			vec4 src = texture(sourceBitmap, textureCoords.xy);
+			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
 			gl_FragColor = glow * (1.0 - src.a);
 		}
 	")
-	@:glVertexSource("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexSource("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;
 		uniform vec2 offset;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
 			gl_Position = openfl_Matrix * openfl_Position;
@@ -702,21 +702,21 @@ private class InnerCombineKnockoutShader extends BitmapFilterShader
 	@:glFragmentSource("
 		uniform sampler2D openfl_Texture;
 		uniform sampler2D sourceBitmap;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
-			vec4 src = texture2D(sourceBitmap, textureCoords.xy);
-			vec4 glow = texture2D(openfl_Texture, textureCoords.zw);
+			vec4 src = texture(sourceBitmap, textureCoords.xy);
+			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
 			gl_FragColor = glow * src.a;
 		}
 	")
-	@:glVertexSource("attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+	@:glVertexSource("in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 		uniform mat4 openfl_Matrix;
 		uniform vec2 openfl_TextureSize;
 		uniform vec2 offset;
-		varying vec4 textureCoords;
+		out vec4 textureCoords;
 
 		void main(void) {
 			gl_Position = openfl_Matrix * openfl_Position;
