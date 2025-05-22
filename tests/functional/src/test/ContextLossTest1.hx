@@ -217,12 +217,13 @@ class ContextLossTest1 extends FunctionalTest
 
 		var fragmentSource = #if !desktop "precision mediump float;" + #end
 
-		"out vec2 vTexCoord;
+		"layout(location = 0) out vec4 ofl_FragColor;
+			out vec2 vTexCoord;
 			uniform sampler2D uImage0;
 
 			void main(void)
 			{
-				gl_FragColor = texture (uImage0, vTexCoord);
+				ofl_FragColor = texture (uImage0, vTexCoord);
 			}";
 
 		program = context.createProgram(GLSL);

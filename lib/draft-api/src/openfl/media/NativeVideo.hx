@@ -666,7 +666,7 @@ final class NativeVideo extends Bitmap {
 			float g = y - 0.1873   * u - 0.4681   * v;
 			float b = y + 1.8556   * u;
 
-			gl_FragColor = vec4(r, g, b, 1.0);
+			ofl_FragColor = vec4(r, g, b, 1.0);
 		}
 			";
 

@@ -483,7 +483,7 @@ private class InvertAlphaShader extends BitmapFilterShader
 
 		void main(void) {
 			vec4 texel = texture(openfl_Texture, vTexCoord);
-			gl_FragColor = vec4(texel.rgb, 1.0 - texel.a);
+			ofl_FragColor = vec4(texel.rgb, 1.0 - texel.a);
 		}
 	")
 	@:glVertexSource("
@@ -536,7 +536,7 @@ private class BlurAlphaShader extends BitmapFilterShader
 			a += dot(top, contributions.xyz);
             a += dot(bottom, contributions.zyx);
 
-			gl_FragColor = uColor * clamp(a * uStrength, 0.0, 1.0);
+			ofl_FragColor = uColor * clamp(a * uStrength, 0.0, 1.0);
 		}
 	")
 	@:glVertexSource("
@@ -591,7 +591,7 @@ private class CombineShader extends BitmapFilterShader
 			vec4 src = texture(sourceBitmap, textureCoords.xy);
 			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
-			gl_FragColor = src + glow * (1.0 - src.a);
+			ofl_FragColor = src + glow * (1.0 - src.a);
 		}
 	")
 	@:glVertexSource("in vec4 openfl_Position;
@@ -630,7 +630,7 @@ private class InnerCombineShader extends BitmapFilterShader
 			vec4 src = texture(sourceBitmap, textureCoords.xy);
 			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
-			gl_FragColor = vec4((src.rgb * (1.0 - glow.a)) + (glow.rgb * src.a), src.a);
+			ofl_FragColor = vec4((src.rgb * (1.0 - glow.a)) + (glow.rgb * src.a), src.a);
 		}
 	")
 	@:glVertexSource("in vec4 openfl_Position;
@@ -669,7 +669,7 @@ private class CombineKnockoutShader extends BitmapFilterShader
 			vec4 src = texture(sourceBitmap, textureCoords.xy);
 			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
-			gl_FragColor = glow * (1.0 - src.a);
+			ofl_FragColor = glow * (1.0 - src.a);
 		}
 	")
 	@:glVertexSource("in vec4 openfl_Position;
@@ -708,7 +708,7 @@ private class InnerCombineKnockoutShader extends BitmapFilterShader
 			vec4 src = texture(sourceBitmap, textureCoords.xy);
 			vec4 glow = texture(openfl_Texture, textureCoords.zw);
 
-			gl_FragColor = glow * src.a;
+			ofl_FragColor = glow * src.a;
 		}
 	")
 	@:glVertexSource("in vec4 openfl_Position;

@@ -26,11 +26,12 @@ class BitmapFilterShader extends Shader
 			#pragma body
 
 		}")
-	@:glFragmentHeader("out vec2 openfl_TextureCoordv;
+	@:glFragmentHeader("layout(location = 0) out vec4 ofl_FragColor;
+		out vec2 openfl_TextureCoordv;
 
 		uniform sampler2D openfl_Texture;
 		uniform vec2 openfl_TextureSize;")
-	@:glFragmentBody("gl_FragColor = texture (openfl_Texture, openfl_TextureCoordv);")
+	@:glFragmentBody("ofl_FragColor = texture (openfl_Texture, openfl_TextureCoordv);")
 	#if emscripten
 	@:glFragmentSource("#pragma header
 
@@ -38,7 +39,7 @@ class BitmapFilterShader extends Shader
 
 			#pragma body
 
-			gl_FragColor = gl_FragColor.bgra;
+			ofl_FragColor = ofl_FragColor.bgra;
 
 		}")
 	#else

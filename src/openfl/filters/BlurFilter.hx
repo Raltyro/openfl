@@ -288,7 +288,7 @@ private class BlurShader extends BitmapFilterShader
 			sum += texture(openfl_Texture, vBlurCoords[5]) * 0.05399;
 			sum += texture(openfl_Texture, vBlurCoords[6]) * 0.00443;
 
-			gl_FragColor = sum;
+			ofl_FragColor = sum;
 
 		}")
 	@:glVertexSource("in vec4 openfl_Position;

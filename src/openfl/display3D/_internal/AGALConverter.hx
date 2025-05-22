@@ -567,7 +567,7 @@ private class DestRegister
 
 		if (type == RegisterType.OUTPUT)
 		{
-			str = programType == ProgramType.VERTEX ? "gl_Position" : "gl_FragColor";
+			str = programType == ProgramType.VERTEX ? "gl_Position" : "ofl_FragColor";
 		}
 		else
 		{
@@ -979,7 +979,7 @@ private class SourceRegister
 	{
 		if (type == RegisterType.OUTPUT)
 		{
-			return programType == ProgramType.VERTEX ? "gl_Position" : "gl_FragColor";
+			return programType == ProgramType.VERTEX ? "gl_Position" : "ofl_FragColor";
 		}
 
 		var fullxyzw = (s == 228) && (sourceMask == 0xF);

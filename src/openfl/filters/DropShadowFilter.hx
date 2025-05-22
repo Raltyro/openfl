@@ -565,7 +565,7 @@ private class HideShader extends BitmapFilterShader
 		out vec4 textureCoords;
 
 		void main(void) {
-			gl_FragColor = texture(openfl_Texture, textureCoords.zw);
+			ofl_FragColor = texture(openfl_Texture, textureCoords.zw);
 		}
 	")
 	@:glVertexSource("in vec4 openfl_Position;
