@@ -13,8 +13,7 @@ class Context3DMaskShader extends Shader
 	public static var opaqueBitmapData:BitmapData = new BitmapData(1, 1, false, 0);
 
 	@:glFragmentSource("layout(location = 0) out vec4 ofl_FragColor;
-		out vec2 openfl_TextureCoordv;
-
+		in vec2 openfl_TextureCoordv;
 		uniform sampler2D openfl_Texture;
 
 		void main(void) {
