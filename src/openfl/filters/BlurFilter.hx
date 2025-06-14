@@ -273,9 +273,8 @@ import lime._internal.graphics.ImageDataUtil; // TODO
 #end
 private class BlurShader extends BitmapFilterShader
 {
-	@:glFragmentSource("uniform sampler2D openfl_Texture;
-
-		out vec2 vBlurCoords[7];
+	@:glFragmentSource("#pragma header
+		in vec2 vBlurCoords[7];
 
 		void main(void) {
 
@@ -291,11 +290,7 @@ private class BlurShader extends BitmapFilterShader
 			ofl_FragColor = sum;
 
 		}")
-	@:glVertexSource("in vec4 openfl_Position;
-		in vec2 openfl_TextureCoord;
-
-		uniform mat4 openfl_Matrix;
-
+	@:glVertexSource("#pragma header
 		uniform vec2 uRadius;
 		out vec2 vBlurCoords[7];
 		uniform vec2 uTextureSize;

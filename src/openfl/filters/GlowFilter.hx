@@ -699,10 +699,9 @@ private class CombineKnockoutShader extends BitmapFilterShader
 #end
 private class InnerCombineKnockoutShader extends BitmapFilterShader
 {
-	@:glFragmentSource("
-		uniform sampler2D openfl_Texture;
+	@:glFragmentSource("#pragma header
 		uniform sampler2D sourceBitmap;
-		out vec4 textureCoords;
+		in vec4 textureCoords;
 
 		void main(void) {
 			vec4 src = texture(sourceBitmap, textureCoords.xy);
@@ -711,10 +710,7 @@ private class InnerCombineKnockoutShader extends BitmapFilterShader
 			ofl_FragColor = glow * src.a;
 		}
 	")
-	@:glVertexSource("in vec4 openfl_Position;
-		in vec2 openfl_TextureCoord;
-		uniform mat4 openfl_Matrix;
-		uniform vec2 openfl_TextureSize;
+	@:glVertexSource("#pragma header
 		uniform vec2 offset;
 		out vec4 textureCoords;
 
