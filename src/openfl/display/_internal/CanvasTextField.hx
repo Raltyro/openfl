@@ -375,6 +375,15 @@ class CanvasTextField
 					}
 				}
 
+				// Clear old cache immediately.
+				if(graphics.__bitmap != null)
+				{
+					if(graphics.__bitmap.__texture != null)
+						graphics.__bitmap.__texture.dispose();
+
+					graphics.__bitmap.dispose();
+				}
+
 				graphics.__bitmap = BitmapData.fromCanvas(textField.__graphics.__canvas);
 				graphics.__bitmapScale = pixelRatio;
 				graphics.__visible = true;

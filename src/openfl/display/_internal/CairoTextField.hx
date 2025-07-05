@@ -154,6 +154,15 @@ class CairoTextField
 			graphics.__visible = true;
 			graphics.__managed = true;
 
+			// Clear old cache immediately.
+			if(graphics.__bitmap != null)
+			{
+				if(graphics.__bitmap.__texture != null)
+					graphics.__bitmap.__texture.dispose();
+
+				graphics.__bitmap.dispose();
+			}
+
 			graphics.__bitmap = bitmap;
 			graphics.__bitmapScale = pixelRatio;
 
