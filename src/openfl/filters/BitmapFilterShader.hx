@@ -27,7 +27,7 @@ class BitmapFilterShader extends Shader
 
 		}")
 	@:glFragmentHeader("layout(location = 0) out vec4 ofl_FragColor;
-		out vec2 openfl_TextureCoordv;
+		layout(location = 1) out vec2 openfl_TextureCoordv;
 
 		uniform sampler2D openfl_Texture;
 		uniform vec2 openfl_TextureSize;")
