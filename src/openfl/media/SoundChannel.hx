@@ -313,7 +313,7 @@ import lime.utils.Int16Array;
 		if (!__isValid) return 0;
 
 		#if lime
-		__audioSource.currentTime = Std.int(value) - __audioSource.offset;
+		__audioSource.currentTime = value - __audioSource.offset;
 		#end
 		return value;
 	}
