@@ -10,51 +10,19 @@ using haxe.macro.Tools;
 using haxe.macro.TypeTools;
 
 @SuppressWarnings("checkstyle:FieldDocComment")
-class ShaderMacro
-{
+class ShaderMacro {
 	#if 0
 	private static var __suppressWarning:Array<Class<Dynamic>> = [Expr];
 	#end
 
-	public static function build():Array<Field>
-	{
+	public static function build():Array<Field> {
 		var fields = Context.getBuildFields();
 
-		var glFragmentHeader = "";
-		var glFragmentBody = "";
-		var glVertexHeader = "";
-		var glVertexBody = "";
+		var glMetas = new GlMetas();
 
-		var glFragmentSource:String = null;
-		var glVertexSource:String = null;
-
-		for (field in fields)
-		{
-			for (meta in field.meta)
-			{
-				switch (meta.name)
-				{
-					case "glFragmentSource", ":glFragmentSource":
-						glFragmentSource = meta.params[0].getValue();
-
-					case "glVertexSource", ":glVertexSource":
-						glVertexSource = meta.params[0].getValue();
-
-					case "glFragmentHeader", ":glFragmentHeader":
-						glFragmentHeader = meta.params[0].getValue();
-
-					case "glFragmentBody", ":glFragmentBody":
-						glFragmentBody = meta.params[0].getValue();
-
-					case "glVertexHeader", ":glVertexHeader":
-						glVertexHeader = meta.params[0].getValue();
-
-					case "glVertexBody", ":glVertexBody":
-						glVertexBody = meta.params[0].getValue();
-
-					default:
-				}
-			}
+		for (field in fields) {
+			if (field.name == "new" && field.meta != null)
+				glMetas.add(field.meta);
 		}
 
 		var pos = Context.currentPos();
@@ -63,56 +31,20 @@ class ShaderMacro
 		var parent = superClass;
 		var parentFields:Array<ClassField>;
 
-		while (parent != null)
-		{
+		while (parent != null) {
 			parentFields = [parent.constructor.get()].concat(parent.fields.get());
 
-			for (field in parentFields)
-			{
-				for (meta in field.meta.get())
-				{
-					switch (meta.name)
-					{
-						case "glFragmentSource", ":glFragmentSource":
-							if (glFragmentSource == null) glFragmentSource = meta.params[0].getValue();
-
-						case "glVertexSource", ":glVertexSource":
-							if (glVertexSource == null) glVertexSource = meta.params[0].getValue();
-
-						case "glFragmentHeader", ":glFragmentHeader":
-							glFragmentHeader = meta.params[0].getValue() + "\n" + glFragmentHeader;
-
-						case "glFragmentBody", ":glFragmentBody":
-							glFragmentBody = meta.params[0].getValue() + "\n" + glFragmentBody;
-
-						case "glVertexHeader", ":glVertexHeader":
-							glVertexHeader = meta.params[0].getValue() + "\n" + glVertexHeader;
-
-						case "glVertexBody", ":glVertexBody":
-							glVertexBody = meta.params[0].getValue() + "\n" + glVertexBody;
-
-						default:
-					}
-				}
+			for (field in parentFields) {
+				if (field.name == "new")
+					glMetas.add(field.meta.get());
 			}
 
 			parent = parent.superClass != null ? parent.superClass.t.get() : null;
 		}
 
-		if (glVertexSource != null || glFragmentSource != null)
-		{
-			if (glFragmentSource != null && glFragmentHeader != null && glFragmentBody != null)
-			{
-				glFragmentSource = StringTools.replace(glFragmentSource, "#pragma header", glFragmentHeader);
-				glFragmentSource = StringTools.replace(glFragmentSource, "#pragma body", glFragmentBody);
-			}
-
-			if (glVertexSource != null && glVertexHeader != null && glVertexBody != null)
-			{
-				glVertexSource = StringTools.replace(glVertexSource, "#pragma header", glVertexHeader);
-				glVertexSource = StringTools.replace(glVertexSource, "#pragma body", glVertexBody);
-			}
-
+		var glFragmentSource = glMetas.constructFragmentSource();
+		var glVertexSource = glMetas.constructVertexSource();
+		if (glVertexSource != null || glFragmentSource != null) {
 			var shaderDataFields:Array<Field> = [];
 			var uniqueFields:Array<Field> = [];
 
@@ -120,20 +52,15 @@ class ShaderMacro
 			processFields(glVertexSource, "uniform", shaderDataFields, pos);
 			processFields(glFragmentSource, "uniform", shaderDataFields, pos);
 
-			if (shaderDataFields.length > 0)
-			{
+			if (shaderDataFields.length > 0) {
 				var fieldNames = new Map<String, Bool>();
 
-				for (field in shaderDataFields)
-				{
+				for (field in shaderDataFields) {
 					parent = superClass;
 
-					while (parent != null)
-					{
-						for (parentField in parent.fields.get())
-						{
-							if (parentField.name == field.name)
-							{
+					while (parent != null) {
+						for (parentField in parent.fields.get()) {
+							if (parentField.name == field.name) {
 								fieldNames.set(field.name, true);
 							}
 						}
@@ -141,8 +68,7 @@ class ShaderMacro
 						parent = parent.superClass != null ? parent.superClass.t.get() : null;
 					}
 
-					if (!fieldNames.exists(field.name))
-					{
+					if (!fieldNames.exists(field.name)) {
 						uniqueFields.push(field);
 					}
 
@@ -151,18 +77,15 @@ class ShaderMacro
 			}
 
 			// #if !display
-			for (field in fields)
-			{
-				switch (field.name)
-				{
+			for (field in fields) {
+				switch (field.name) {
 					case "new":
-						var block = switch (field.kind)
-						{
+						var block = switch (field.kind) {
 							case FFun(f):
-								if (f.expr == null) null;
+								if (f.expr == null)
+									null;
 
-								switch (f.expr.expr)
-								{
+								switch (f.expr.expr) {
 									case EBlock(e): e;
 									default: null;
 								}
@@ -170,18 +93,14 @@ class ShaderMacro
 							default: null;
 						}
 
-						if (glVertexSource != null)
-						{
-							block.unshift(macro if (__glVertexSource == null)
-							{
+						if (glVertexSource != null) {
+							block.unshift(macro if (__glVertexSource == null) {
 								__glVertexSource = $v{glVertexSource};
 							});
 						}
 
-						if (glFragmentSource != null)
-						{
-							block.unshift(macro if (__glFragmentSource == null)
-							{
+						if (glFragmentSource != null) {
+							block.unshift(macro if (__glFragmentSource == null) {
 								__glFragmentSource = $v{glFragmentSource};
 							});
 						}
@@ -200,44 +119,35 @@ class ShaderMacro
 		return fields;
 	}
 
-	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position):Void
-	{
-		if (source == null) return;
+	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position):Void {
+		if (source == null)
+			return;
 
 		var lastMatch = 0, position, regex, field:Field, name, type;
 
-		if (storageType == "uniform")
-		{
+		if (storageType == "uniform") {
 			regex = ~/uniform ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/;
-		}
-		else
-		{
+		} else {
 			regex = ~/in ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/;
 		}
 
 		var fieldAccess:Access;
 
-		while (regex.matchSub(source, lastMatch))
-		{
+		while (regex.matchSub(source, lastMatch)) {
 			type = regex.matched(1);
 			name = regex.matched(2);
 
-			if (StringTools.startsWith(name, "gl_"))
-			{
+			if (StringTools.startsWith(name, "gl_")) {
 				continue;
 			}
 
-			if (StringTools.startsWith(name, "openfl_"))
-			{
+			if (StringTools.startsWith(name, "openfl_")) {
 				fieldAccess = APrivate;
-			}
-			else
-			{
+			} else {
 				fieldAccess = APublic;
 			}
 
-			if (StringTools.startsWith(type, "sampler"))
-			{
+			if (StringTools.startsWith(type, "sampler")) {
 				field = {
 					name: name,
 					meta: [],
@@ -245,11 +155,8 @@ class ShaderMacro
 					kind: FVar(macro :openfl.display.ShaderInput<openfl.display.BitmapData>),
 					pos: pos
 				};
-			}
-			else
-			{
-				var parameterType:openfl.display.ShaderParameterType = switch (type)
-				{
+			} else {
+				var parameterType:openfl.display.ShaderParameterType = switch (type) {
 					case "bool": BOOL;
 					case "double", "float": FLOAT;
 					case "int", "uint": INT;
@@ -274,8 +181,7 @@ class ShaderMacro
 					default: null;
 				}
 
-				switch (parameterType)
-				{
+				switch (parameterType) {
 					case BOOL, BOOL2, BOOL3, BOOL4:
 						field = {
 							name: name,
@@ -305,17 +211,14 @@ class ShaderMacro
 				}
 			}
 
-			if (StringTools.startsWith(name, "openfl_"))
-			{
+			if (StringTools.startsWith(name, "openfl_")) {
 				field.meta = [
 					{name: ":keep", pos: pos},
 					{name: ":dox", params: [macro hide], pos: pos},
 					{name: ":noCompletion", pos: pos},
 					{name: ":allow", params: [macro openfl.display._internal], pos: pos}
 				];
-			}
-			else
-			{
+			} else {
 				field.meta = [{name: ":keep", pos: pos}];
 			}
 
@@ -324,6 +227,87 @@ class ShaderMacro
 			position = regex.matchedPos();
 			lastMatch = position.pos + position.len;
 		}
+	}
+}
+
+/**
+	Stores metadata and uses them to constructa  glsl shader, with important logging info
+ */
+abstract GlMetas(Array<Map<String, MetadataEntry>>) {
+	inline static var GL_FRAGMENT_SOURCE = "glFragmentSource";
+	inline static var GL_FRAGMENT_HEADER = "glFragmentHeader";
+	inline static var GL_FRAGMENT_BODY = "glFragmentBody";
+	inline static var GL_VERTEX_SOURCE = "glVertexSource";
+	inline static var GL_VERTEX_HEADER = "glVertexHeader";
+	inline static var GL_VERTEX_BODY = "glVertexBody";
+
+	static var names = [
+		GL_FRAGMENT_SOURCE,
+		GL_FRAGMENT_HEADER,
+		GL_FRAGMENT_BODY,
+		GL_VERTEX_SOURCE,
+		GL_VERTEX_HEADER,
+		GL_VERTEX_BODY
+	];
+
+	inline public function new() {
+		this = [];
+	}
+
+	public function add(metas:Metadata) {
+		var result = new Map<String, MetadataEntry>();
+
+		for (meta in metas) {
+			var metaName = meta.name.split(":").join("");
+			if (names.indexOf(metaName) != -1)
+				result[metaName] = meta;
+		}
+
+		this.push(result);
+	}
+
+	public function constructFragmentSource():Null<String> {
+		return construct(getFirst(GL_FRAGMENT_SOURCE), concatAll(GL_FRAGMENT_HEADER), concatAll(GL_FRAGMENT_BODY));
+	}
+
+	public function constructVertexSource():Null<String> {
+		return construct(getFirst(GL_VERTEX_SOURCE), concatAll(GL_VERTEX_HEADER), concatAll(GL_VERTEX_BODY));
+	}
+
+	function construct(source, header, body):Null<String> {
+		if (source != null && header != null && body != null) {
+			source = StringTools.replace(source, "#pragma header", header);
+			source = StringTools.replace(source, "#pragma body", body);
+		}
+		return source;
+	}
+
+	inline function getFirst(name:String):Null<String> {
+		var meta = Lambda.find(this, function(item) {
+			return item.exists(name);
+		});
+		return meta == null ? null : metaToString(meta[name]);
+	}
+
+	inline function concatAll(name:String):Null<String> {
+		return Lambda.fold(this, function(item, result) {
+			if (!item.exists(name))
+				return result;
+
+			return '${metaToString(item[name])}\n$result';
+		}, "");
+	}
+
+	inline function metaToString(meta:MetadataEntry):String {
+		#if haxe4
+		var loc = meta.params[0].pos.toLocation();
+		var name = meta.name.split(":").join("");
+		return '// { openfl_region       $name - ${loc.file}:${loc.range.start.line}\n'
+			+ '${meta.params[0].getValue()}\n'
+			+ '// } openfl_endregion    $name - ${loc.file}:${loc.range.end.line}';
+		#else
+		return meta.params[0].getValue();
+		#end
 	}
 }
 #end
