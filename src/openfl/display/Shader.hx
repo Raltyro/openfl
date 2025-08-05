@@ -313,6 +313,16 @@ class Shader {
 	// return shader;
 	// }
 	@:noCompletion private function __createGLShader(source:String, type:Int):GLShader {
+		// we do this here apparently too?
+		final replaceKeywords:Array<Array<String>> = [
+			["gl_FragColor", "ofl_FragColor"],
+			["flixel_texture2D", "__flixel__"],
+			["texture2D", "texture"],
+			["__flixel__", "flixel_texture2D"]
+		];
+		for (word in replaceKeywords) {
+			source = source.replace(word[0], word[1]);
+		}
 		var gl = __context.gl;
 
 		var shader = gl.createShader(type);
