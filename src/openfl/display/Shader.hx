@@ -320,6 +320,9 @@ class Shader {
 			["texture2D", "texture"],
 			["__flixel__", "flixel_texture2D"]
 		];
+		for (word in replaceKeywords) {
+			source = source.replace(word[0], word[1]);
+		}
 		var gl = __context.gl;
 
 		var shader = gl.createShader(type);
