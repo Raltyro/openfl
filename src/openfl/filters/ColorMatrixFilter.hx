@@ -230,10 +230,7 @@ import lime.math.RGBA;
 	// Get & Set Methods
 	@:noCompletion private function get_matrix():Array<Float>
 	{
-		// need to return a copy because we shouldn't allow values within the
-		// matrix array to be modified directly. instead, the user should pass a
-		// whole array to the matrix property
-		return __matrix.copy();
+		return __matrix;
 	}
 
 	@:noCompletion private function set_matrix(value:Array<Float>):Array<Float>
@@ -254,24 +251,26 @@ import lime.math.RGBA;
 @SuppressWarnings("checkstyle:FieldDocComment")
 private class ColorMatrixShader extends BitmapFilterShader
 {
-	@:glFragmentSource("#pragma header
+	@:glFragmentSource("varying vec2 openfl_TextureCoordv;
+		uniform sampler2D openfl_Texture;
+
 		uniform mat4 uMultipliers;
 		uniform vec4 uOffsets;
 
 		void main(void) {
 
-			vec4 color = texture (openfl_Texture, openfl_TextureCoordv);
+			vec4 color = texture2D (openfl_Texture, openfl_TextureCoordv);
 
 			if (color.a == 0.0) {
 
-				ofl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
+				gl_FragColor = vec4 (0.0, 0.0, 0.0, 0.0);
 
 			} else {
 
 				color = vec4 (color.rgb / color.a, color.a);
 				color = uOffsets + color * uMultipliers;
 
-				ofl_FragColor = vec4 (color.rgb * color.a, color.a);
+				gl_FragColor = vec4 (color.rgb * color.a, color.a);
 
 			}
 
