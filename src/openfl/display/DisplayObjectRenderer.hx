@@ -312,7 +312,25 @@ class DisplayObjectRenderer extends EventDispatcher
 					}
 					if (affineChanged && __isShaderFilter(filter))
 					{
+						// Make sure all of the bitmap data caches are disposed of
+						for (cache in [displayObject.__cacheBitmapData, displayObject.__cacheBitmapData2, displayObject.__cacheBitmapData3])
+						{
+							if (cache != null)
+							{
+								if (cache.__texture != null)
+									cache.__texture.dispose();
+								
+								cache.disposeImage();
+								cache.dispose();
+							}
+						}
+						// Then null them all out (including color transform cache) for the GC to pick up later
+						displayObject.__cacheBitmap = null;
 						displayObject.__cacheBitmapData = null;
+						displayObject.__cacheBitmapData2 = null;
+						displayObject.__cacheBitmapData3 = null;
+						displayObject.__cacheBitmapColorTransform = null;
+
 						needRender = true;
 						break;
 					}
