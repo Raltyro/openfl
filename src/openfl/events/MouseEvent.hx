@@ -723,7 +723,7 @@ class MouseEvent extends Event
 		shiftKey = false;
 		altKey = false;
 		ctrlKey = false;
-		bubbles = false;
+		bubbles = true;
 		relatedObject = null;
 		delta = 0;
 		localX = 0;
