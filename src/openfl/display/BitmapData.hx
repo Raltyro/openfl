@@ -2371,7 +2371,7 @@ class BitmapData implements IBitmapDrawable
 			__textureHeight = textureImage.buffer.height;
 		}
 
-		if (!readable && image != null)
+		if (!readable && (image != null || __surface != null))
 		{
 			__surface = null;
 			image = null;

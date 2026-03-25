@@ -226,19 +226,14 @@ class ShaderMacro
 	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position) {
 		if (source == null) return;
 
-		var position, name, type, regex, isArray:Bool, fieldMeta:Metadata, fieldType:ComplexType, field:Field;
+		var position, name, type, isArray:Bool, fieldMeta:Metadata, fieldType:ComplexType, field:Field;
 
-		if (storageType == "uniform")
+		var regex:EReg = switch (storageType)
 		{
-			regex = ~/\buniform\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
-		}
-		else if (storageType == "in")
-		{
-			regex = ~/\bin\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
-		}
-		else
-		{
-			regex = ~/\battribute\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
+			case "uniform": ~/\buniform\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
+			case "in": ~/\bin\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
+			case "attribute": ~/\battribute\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
+			default: throw "Unknown storageType for Shader.processGLSLParameter " + storageType;
 		}
 
 		var lastMatch = 0, fieldAccess;

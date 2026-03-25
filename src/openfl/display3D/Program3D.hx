@@ -540,8 +540,8 @@ import lime.utils.BytePointer;
 			message += (type == gl.VERTEX_SHADER) ? " compiling vertex shader" : " compiling fragment shader";
 			message += "\n" + shaderInfoLog;
 			message += "\n" + source;
-			if (isError) Log.error(message);
-			else if (hasInfoLog) Log.debug(message);
+			if (isError) Log.info(message);//Log.error(message);
+			else if (hasInfoLog) Log.info(message);
 		}
 
 		return glShader;
@@ -569,7 +569,7 @@ import lime.utils.BytePointer;
 
 		if (gl.getProgramParameter(__glProgram, gl.LINK_STATUS) == 0)
 		{
-			Log.error("Unable to initialize the shader program\n" + gl.getProgramInfoLog(__glProgram));
+			Log.info("Unable to initialize the shader program\n" + gl.getProgramInfoLog(__glProgram));
 			return;
 		}
 

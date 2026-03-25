@@ -302,9 +302,17 @@ class GLSLSourceAssembler
 			source = __getPragmaFinder().map(source, (glPragmaFinder:EReg) ->
 			{
 				var pragma = glPragmaFinder.matched(1);
-				return pragmas.exists(pragma) ? pragmas.get(pragma) + "\n" : '#pragma $pragma';
+				return pragmas.exists(pragma) ? '/*pragma $pragma*/\n' + pragmas.get(pragma) + '\n' : 'pragma $pragma';
 			});
 		}
+
+		source = __getIncludeFinder().map(source, (includeFinder:EReg) ->
+		{
+			var include = includeFinder.matched(1);
+			var included = __getIncludeSource(include, isVertex);
+			return included != null ? '/*include $include*/\n' + included : '/*Unknown include $include*/\n';
+		});
+
 
 		var data = __getSource(source, version);
 		extensions = __buildExtensions(__getExtensions(source, extensions == null ? new Map() : extensions.copy()),
@@ -420,6 +428,11 @@ class GLSLSourceAssembler
 		return extensions;
 	}
 
+	private function __getIncludeSource(include:String, fromVertex:Bool):Null<String>
+	{
+		return null;
+	}
+
 	private static function __getSource(source:String, defaultVersion:String):{source:String, versionNumber:Int, versionProfile:String}
 	{
 		var glVersionFinder:EReg = __getVersionFinder();
@@ -512,17 +525,22 @@ class GLSLSourceAssembler
 
 	private static inline function __getExtensionFinder():EReg
 	{
-		return ~/#extension\s+([A-Za-z0-9_]+)\s+:\s+(enable|require|warn|disable|all)\b/g;
+		return ~/(?:^|\s)#extension\s+([A-Za-z0-9_]+)\s+:\s+(enable|require|warn|disable|all)\b/g;
 	}
 
 	private static inline function __getPragmaFinder():EReg
 	{
-		return ~/#pragma\s+(\w+)/g;
+		return ~/(?:^|\s)#pragma\s+(?|"([^"]+)"|'([^']+)'|([^\s]+))/g;
+	}
+
+	private static inline function __getIncludeFinder():EReg
+	{
+		return ~/(?:^|\s)#include\s+(?|"([^"]+)"|'([^']+)'|([^\s]+))/g;
 	}
 
 	private static inline function __getVersionFinder():EReg
 	{
-		return ~/#version\s+(\d+)\s+(core|es|compatibility)?\b/;
+		return ~/(?:^|\s)#version\s+(\d+)\s+(core|es|compatibility)?\b/;
 	}
 
 	private static inline function __getVersionSeperator():EReg
