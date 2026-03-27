@@ -346,9 +346,19 @@ class GLSLSourceAssembler
 			output.add("#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n");
 		}
 
+		@:privateAccess
+		if (openfl.display.OpenGLRenderer.__complexBlendsSupported && !isVertex && versionNumber >= 150)
+		{
+			var behavior = extensions.get("GL_KHR_blend_equation_advanced");
+			if (behavior == "enable" || behavior == "require")
+			{
+				output.add("#ifdef GL_KHR_blend_equation_advanced\nlayout (blend_support_all_equations) out;\n#endif\n");
+			}
+		}
+
 		if (source != null)
 		{
-			if (versionNumber >= 300 && versionProfile != "compatibility" && !isVertex && !StringTools.contains(source, "out vec4"))
+			if (!isVertex && versionNumber >= 300 && versionProfile != "compatibility" && !StringTools.contains(source, "out vec4"))
 			{
 				output.add("out vec4 openfl_FragColor;\n");
 			}
@@ -411,7 +421,7 @@ class GLSLSourceAssembler
 
 		// Enable complex blend modes if supported.
 		@:privateAccess
-		if (!isVertex && openfl.display.OpenGLRenderer.__complexBlendsSupported && versionNumber >= 150)
+		if (openfl.display.OpenGLRenderer.__complexBlendsSupported && !isVertex && versionNumber >= 150)
 		{
 			extensions.set("GL_KHR_blend_equation_advanced", "enable");
 

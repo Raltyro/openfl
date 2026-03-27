@@ -37,6 +37,7 @@ class ShaderMacro
 		var glFragmentSource:String = null, glVertexSource:String = null, glVersion:String = null;
 		var nextFragmentDontOverride = false, nextVertexDontOverride = false;
 		var prefixFragment = "glFragment", prefixVertex = "glVertex", name:String;
+		var fieldNames = new Map<String, Bool>();
 
 		for (field in fields) {
 			for (meta in field.meta) {
@@ -76,6 +77,8 @@ class ShaderMacro
 							addPragma(glVertexPragmas, name.substr(prefixVertex.length).toLowerCase(), meta.params[0].getValue());
 				}
 			}
+
+			fieldNames.set(field.name, true);
 		}
 
 		var fragmentDontOverride = nextFragmentDontOverride, vertexDontOverride = nextVertexDontOverride;
@@ -124,6 +127,8 @@ class ShaderMacro
 								addPragma(glVertexPragmas, name.substr(prefixVertex.length).toLowerCase(), meta.params[0].getValue());
 					}
 				}
+
+				fieldNames.set(field.name, true);
 			}
 
 			fragmentDontOverride = nextFragmentDontOverride;
@@ -133,20 +138,19 @@ class ShaderMacro
 		}
 
 		if (glVertexSource != null || glFragmentSource != null) {
-			var shaderDataFields = new Array<Field>();
-			var uniqueFields = [];
+			var paramBlock:Array<Expr> = [];
 
-			processFields(glVertexSource, "attribute", shaderDataFields, pos);
-			processFields(glVertexSource, "in", shaderDataFields, pos); // For higher GLSL versions
-			processFields(glVertexSource, "uniform", shaderDataFields, pos);
-			processFields(glFragmentSource, "uniform", shaderDataFields, pos);
+			processFields(glVertexSource, "attribute", fieldNames, fields, paramBlock, pos);
+			processFields(glVertexSource, "in", fieldNames, fields, paramBlock, pos); // For higher GLSL versions
+			processFields(glVertexSource, "uniform", fieldNames, fields, paramBlock, pos);
+			processFields(glFragmentSource, "uniform", fieldNames, fields, paramBlock, pos);
 
-			var position, pragmaSource, regex = ~/#pragma (\w+)/, lastMatch = 0;
+			var position, pragmaSource, regex = ~/(?:^|\s)#pragma\s+(?|"([^"]+)"|'([^']+)'|([^\s]+))/g, lastMatch = 0;
 			while (regex.matchSub(glVertexSource, lastMatch)) {
 				if ((pragmaSource = glVertexPragmas.get(regex.matched(1))) != null) {
-					processFields(pragmaSource, "attribute", shaderDataFields, pos);
-					processFields(pragmaSource, "in", shaderDataFields, pos); // For higher GLSL versions
-					processFields(pragmaSource, "uniform", shaderDataFields, pos);
+					processFields(pragmaSource, "attribute", fieldNames, fields, paramBlock, pos);
+					processFields(pragmaSource, "in", fieldNames, fields, paramBlock, pos); // For higher GLSL versions
+					processFields(pragmaSource, "uniform", fieldNames, fields, paramBlock, pos);
 				}
 
 				position = regex.matchedPos();
@@ -156,38 +160,29 @@ class ShaderMacro
 			lastMatch = 0;
 			while (regex.matchSub(glFragmentSource, lastMatch)) {
 				if ((pragmaSource = glFragmentPragmas.get(regex.matched(1))) != null) {
-					processFields(pragmaSource, "uniform", shaderDataFields, pos);
+					processFields(pragmaSource, "uniform", fieldNames, fields, paramBlock, pos);
 				}
 
 				position = regex.matchedPos();
 				lastMatch = position.pos + position.len;
 			}
 
-			if (shaderDataFields.length > 0) {
-				var fieldNames = new Map<String, Bool>();
+			var generateBlock:Array<Expr> = [macro __isGenerated = true];
 
-				for (field in shaderDataFields) {
-					parent = superClass;
+			generateBlock.push(macro __cacheProgramId = $v{localClass.pack.join(".") + "." + localClass.name});
+			generateBlock.push(macro __glFragmentPragmas = $v{glFragmentPragmas});
+			generateBlock.push(macro __glVertexPragmas = $v{glVertexPragmas});
+			generateBlock.push(macro __glVersionRaw = $v{glVersion});
+			generateBlock.push(macro __glVertexExtensions = $v{glVertexExtensions});
+			generateBlock.push(macro __glFragmentExtensions = $v{glFragmentExtensions});
+			if (glVertexSource != null) generateBlock.push(macro __glVertexSourceRaw = $v{glVertexSource});
+			if (glFragmentSource != null) generateBlock.push(macro __glFragmentSourceRaw = $v{glFragmentSource});
 
-					while (parent != null) {
-						for (parentField in parent.fields.get()) {
-							if (parentField.name == field.name)
-								fieldNames.set(field.name, true);
-						}
-
-						parent = parent.superClass != null ? parent.superClass.t.get() : null;
-					}
-
-					if (!fieldNames.exists(field.name)) uniqueFields.push(field);
-					fieldNames[field.name] = true;
-				}
-			}
-
-			// #if !display
+			var newBlock:Array<Expr>;
 			for (field in fields) {
 				switch (field.name) {
 					case "new":
-						var block = switch (field.kind) {
+						newBlock = switch (field.kind) {
 							case FFun(f):
 								if (f.expr == null) null;
 
@@ -199,89 +194,95 @@ class ShaderMacro
 							default: null;
 						}
 
-						var generateBlock:Array<Expr> = [];
-						generateBlock.push(macro __isGenerated = true);
-						generateBlock.push(macro __cacheProgramId = $v{localClass.pack.join(".") + "." + localClass.name});
-						generateBlock.push(macro __glFragmentPragmas = $v{glFragmentPragmas});
-						generateBlock.push(macro __glVertexPragmas = $v{glVertexPragmas});
-						generateBlock.push(macro __glVersionRaw = $v{glVersion});
-						generateBlock.push(macro __glVertexExtensions = $v{glVertexExtensions});
-						generateBlock.push(macro __glFragmentExtensions = $v{glFragmentExtensions});
-						if (glVertexSource != null) generateBlock.push(macro __glVertexSourceRaw = $v{glVertexSource});
-						if (glFragmentSource != null) generateBlock.push(macro __glFragmentSourceRaw = $v{glFragmentSource});
-
-						block.unshift(macro if (!__isGenerated) $b{generateBlock});
-						block.push(macro __init());
-
+						break;
 					default:
 				}
 			}
 
-			fields = fields.concat(uniqueFields);
+			if (newBlock == null) {
+				fields.push({
+					name: "new",
+					access: [],
+					kind: FFun({args: [], expr: {pos: pos, expr: EBlock(newBlock = [macro super()])}}),
+					pos: pos
+				});
+			}
+
+			for (e in paramBlock) newBlock.unshift(e);
+			newBlock.unshift(macro if (__data == null) __data = cast new openfl.display.ShaderData(null));
+			newBlock.unshift(macro if (!__isGenerated) $b{generateBlock});
 		}
 
 		return fields;
 	}
 
-	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position) {
+	private static function processFields(source:String, storageType:String, fieldNames:Map<String, Bool>, fields:Array<Field>,
+			paramBlock:Array<Expr>, pos:Position)
+	{
 		if (source == null) return;
 
-		var position, name, type, isArray:Bool, fieldMeta:Metadata, fieldType:ComplexType, field:Field;
-
+		var isUniform = storageType == "uniform";
 		var regex:EReg = switch (storageType)
 		{
-			case "uniform": ~/\buniform\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
+			case "uniform": ~/\buniform\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?\s*(?:=)?\s*(.+?(?=;))?/gu;
 			case "in": ~/\bin\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
 			case "attribute": ~/\battribute\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s*)?(?:\[(\w+)\])?/gu;
-			default: throw "Unknown storageType for Shader.processGLSLParameter " + storageType;
+			default: throw "Unknown storageType " + storageType;
 		}
 
-		var lastMatch = 0, fieldAccess;
+		var name, type:openfl.display.ShaderParameterType, isSampler:Bool, arrayLength:Null<Int>, size:Int, defaultAssign:Null<String>;
+		var field:Field, fieldAccess:Access, fieldMeta:Metadata, fieldType:ComplexType;
+		var lastMatch = 0, position;
 
 		while (regex.matchSub(source, lastMatch))
 		{
-			type = regex.matched(1);
 			name = regex.matched(2);
-			isArray = regex.matched(3) != null;
-
-			if (StringTools.startsWith(name, "gl_"))
+			if (fieldNames.exists(name) || StringTools.startsWith(name, "gl_"))
 			{
+				position = regex.matchedPos();
+				lastMatch = position.pos + position.len;
 				continue;
 			}
 
-			if (StringTools.startsWith(type, "sampler"))
+			if (regex.matched(3) == null) arrayLength = 0;
+			else if ((arrayLength = Std.parseInt(regex.matched(3))) == null) arrayLength = 1;
+
+			if (StringTools.startsWith(regex.matched(1), "sampler"))
 			{
+				isSampler = true;
+				type = null;
 				fieldType = macro :openfl.display.ShaderInput<openfl.display.BitmapData>;
 			}
 			else
 			{
-				var parameterType:openfl.display.ShaderParameterType = switch (type)
+				isSampler = false;
+				type = switch (regex.matched(1))
 				{
-					case "bool": isArray ? BOOLV : BOOL;
-					case "double", "float": isArray ? FLOATV : FLOAT;
-					case "int", "uint": isArray ? INTV : INT;
-					case "bvec2": isArray ? BOOL2V : BOOL2;
-					case "bvec3": isArray ? BOOL3V : BOOL3;
-					case "bvec4": isArray ? BOOL4V : BOOL4;
-					case "ivec2", "uvec2": isArray ? INT2V : INT2;
-					case "ivec3", "uvec3": isArray ? INT3V : INT3;
-					case "ivec4", "uvec4": isArray ? INT4V : INT4;
-					case "vec2", "dvec2": isArray ? FLOAT2V : FLOAT2;
-					case "vec3", "dvec3": isArray ? FLOAT3V : FLOAT3;
-					case "vec4", "dvec4": isArray ? FLOAT4V : FLOAT4;
-					case "mat2", "mat2x2": isArray ? MATRIX2X2V : MATRIX2X2;
-					case "mat2x3": isArray ? MATRIX2X3V : MATRIX2X3;
-					case "mat2x4": isArray ? MATRIX2X4V : MATRIX2X4;
-					case "mat3x2": isArray ? MATRIX3X2V : MATRIX3X2;
-					case "mat3", "mat3x3": isArray ? MATRIX3X3V : MATRIX3X3;
-					case "mat3x4": isArray ? MATRIX3X4V : MATRIX3X4;
-					case "mat4x2": isArray ? MATRIX4X2V : MATRIX4X2;
-					case "mat4x3": isArray ? MATRIX4X3V : MATRIX4X3;
-					case "mat4", "mat4x4": isArray ? MATRIX4X4V : MATRIX4X4;
+					case "bool": arrayLength != 0 ? BOOLV : BOOL;
+					case "double", "float": arrayLength != 0 ? FLOATV : FLOAT;
+					case "int", "uint": arrayLength != 0 ? INTV : INT;
+					case "bvec2": arrayLength != 0 ? BOOL2V : BOOL2;
+					case "bvec3": arrayLength != 0 ? BOOL3V : BOOL3;
+					case "bvec4": arrayLength != 0 ? BOOL4V : BOOL4;
+					case "ivec2", "uvec2": arrayLength != 0 ? INT2V : INT2;
+					case "ivec3", "uvec3": arrayLength != 0 ? INT3V : INT3;
+					case "ivec4", "uvec4": arrayLength != 0 ? INT4V : INT4;
+					case "vec2", "dvec2": arrayLength != 0 ? FLOAT2V : FLOAT2;
+					case "vec3", "dvec3": arrayLength != 0 ? FLOAT3V : FLOAT3;
+					case "vec4", "dvec4": arrayLength != 0 ? FLOAT4V : FLOAT4;
+					case "mat2", "mat2x2": arrayLength != 0 ? MATRIX2X2V : MATRIX2X2;
+					case "mat2x3": arrayLength != 0 ? MATRIX2X3V : MATRIX2X3;
+					case "mat2x4": arrayLength != 0 ? MATRIX2X4V : MATRIX2X4;
+					case "mat3x2": arrayLength != 0 ? MATRIX3X2V : MATRIX3X2;
+					case "mat3", "mat3x3": arrayLength != 0 ? MATRIX3X3V : MATRIX3X3;
+					case "mat3x4": arrayLength != 0 ? MATRIX3X4V : MATRIX3X4;
+					case "mat4x2": arrayLength != 0 ? MATRIX4X2V : MATRIX4X2;
+					case "mat4x3": arrayLength != 0 ? MATRIX4X3V : MATRIX4X3;
+					case "mat4", "mat4x4": arrayLength != 0 ? MATRIX4X4V : MATRIX4X4;
 					default: null;
 				}
 
-				switch (parameterType)
+				switch (type)
 				{
 					case BOOL, BOOL2, BOOL3, BOOL4, BOOLV, BOOL2V, BOOL3V, BOOL4V:
 						fieldType = macro :openfl.display.ShaderParameter<Bool>;
@@ -310,31 +311,26 @@ class ShaderMacro
 				fieldAccess = APublic;
 			}
 
-			fields.push({
-				name: "get_" + name,
-				meta: fieldMeta,
-				access: [APrivate],
-				kind: FFun({
-					args: [], ret: fieldType,
-					expr: macro
-					{
-						if (__glSourceDirty)
-						{
-							__init();
-						}
-						return $i{name};
-					}
-				}),
-				pos: pos
-			});
-
-			fields.push({
+			field = {
 				name: name,
 				meta: fieldMeta,
 				access: [fieldAccess],
-				kind: FProp("get", "null", fieldType),
+				kind: FVar(fieldType),
 				pos: pos
-			});
+			};
+
+			fields.push(field);
+			fieldNames.set(name, true);
+
+			size = arrayLength == 0 ? 1 : arrayLength;
+			defaultAssign = isUniform ? regex.matched(4) : null;
+			if (defaultAssign != null) {
+				paramBlock.push(macro __registerParameter($v{name}, cast $v{type}, $v{isSampler}, $v{size}, null, $v{isUniform},
+					__getParameterDefault($v{defaultAssign}, cast $v{type}, $v{isSampler})));
+			}
+			else {
+				paramBlock.push(macro __registerParameter($v{name}, cast $v{type}, $v{isSampler}, $v{size}, null, $v{isUniform}, null));
+			}
 
 			position = regex.matchedPos();
 			lastMatch = position.pos + position.len;

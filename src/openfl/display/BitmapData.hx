@@ -124,7 +124,6 @@ import openfl.display._internal.stats.DrawCallContext;
 @:access(openfl.display3D.textures.TextureBase)
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.DisplayObject)
-@:access(openfl.display.DisplayObjectShader)
 @:access(openfl.display.Graphics)
 @:access(openfl.display.Shader)
 @:access(openfl.filters.BitmapFilter)
@@ -776,8 +775,6 @@ class BitmapData implements IBitmapDrawable
 			}
 		}
 		#end
-
-		if (__texture != null) __texture.dispose();
 
 		image = null;
 

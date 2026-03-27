@@ -35,7 +35,8 @@ import openfl.display._internal.stats.DrawCallContext;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DGraphics
 {
-	private static var blankBitmapData:BitmapData = new BitmapData(1, 1, false, 0);
+	public static var blankBitmapData:BitmapData = new BitmapData(1, 1, false, 0);
+
 	private static var maskRender:Bool;
 	private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 	private static var tempVerticesVector:Vector<Float> = new Vector<Float>();

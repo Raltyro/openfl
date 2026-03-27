@@ -106,7 +106,7 @@ class Shader
 			default: throw "Unknown storageType for Shader.processGLSLParameter " + storageType;
 		}
 
-		var arrayLength:Null<Int>, p;
+		var arrayLength:Null<Int>, position;
 		return regex.map(source, (_) ->
 		{
 			if (regex.matched(3) == null) arrayLength = 0;
@@ -116,8 +116,8 @@ class Shader
 
 			if (isVertex)
 			{
-				p = regex.matchedPos();
-				return source.substr(p.pos, p.len);
+				position = regex.matchedPos();
+				return source.substr(position.pos, position.len);
 			}
 			else
 			{
@@ -412,14 +412,10 @@ class Shader
 	{
 		byteCode = code;
 
-		// this variable is set in macro instead to avoid the runtime shader stuff accidentally bypassing it
-		//__cacheProgramId = Type.getClassName(Type.getClass(this));
 		__glSourceDirty = true;
 		__numPasses = 1;
 		__precisionHint = FULL;
-
 		__createAssembler();
-		//__data = new ShaderData(code);
 	}
 
 	@:noCompletion private function __createAssembler():Void
@@ -680,7 +676,7 @@ class Shader
 		}
 
 		var type = getParameterTypeFromGLSL(typeName, arrayLength != 0), isSampler = StringTools.startsWith(typeName, "sampler");
-		__registerParameter(name, type, arrayLength == 0 ? 1 : arrayLength, null, !isVertex, isSampler,
+		__registerParameter(name, type, isSampler, arrayLength == 0 ? 1 : arrayLength, null, !isVertex,
 			__getParameterDefault(defaultAssign, type, isSampler));
 	}
 
@@ -762,13 +758,13 @@ class Shader
 				continue;
 			}
 
-			__registerParameter(name, program.__glslAttribTypes[i], program.__glslAttribSizes[i], program.__glslAttribLocations[i], false, false, null);
+			__registerParameter(name, program.__glslAttribTypes[i], false, program.__glslAttribSizes[i], program.__glslAttribLocations[i], false, null);
 		}
 
 		for (i in 0...program.__glslSamplerNames.length)
 		{
-			__registerParameter(program.__glslSamplerNames[i], null, 1, program.__glslSamplerLocations[i],
-				true, true, __getParameterDefault(program.__glslUniformDefaults[i], null, true));
+			__registerParameter(program.__glslSamplerNames[i], null, true, 1, program.__glslSamplerLocations[i],
+				true, __getParameterDefault(program.__glslUniformDefaults[i], null, true));
 		}
 
 		for (i in 0...program.__glslUniformNames.length)
@@ -779,13 +775,13 @@ class Shader
 				continue;
 			}
 
-			__registerParameter(name, program.__glslUniformTypes[i], program.__glslUniformSizes[i], program.__glslUniformLocations[i],
-				true, false, __getParameterDefault(program.__glslUniformDefaults[i], program.__glslUniformTypes[i], false));
+			__registerParameter(name, program.__glslUniformTypes[i], false, program.__glslUniformSizes[i], program.__glslUniformLocations[i],
+				true, __getParameterDefault(program.__glslUniformDefaults[i], program.__glslUniformTypes[i], false));
 		}
 	}
 
-	@:noCompletion private function __registerParameter(name:String, type:ShaderParameterType, size:Int, location:Dynamic/*GLUniformLocation*/,
-			isUniform:Bool, isSampler:Bool, defaultValue:Dynamic)
+	@:noCompletion private function __registerParameter(name:String, type:ShaderParameterType, isSampler:Bool,
+			size:Int, location:Dynamic/*GLUniformLocation*/, isUniform:Bool, defaultValue:Dynamic)
 	{
 		var arrayLength = switch (type)
 		{
@@ -842,8 +838,11 @@ class Shader
 				if (input != null)
 				{
 					if (input.input == null) input.input = cast defaultValue;
-					if ((input.index = location) == -1) __inputBitmapData.remove(input);
-					else if (!__inputBitmapData.contains(input)) __inputBitmapData.push(input);
+					if (__inputBitmapData != null)
+					{
+						if ((input.index = location) == -1) __inputBitmapData.remove(input);
+						else if (!__inputBitmapData.contains(input)) __inputBitmapData.push(input);
+					}
 					return;// register(input);
 				}
 			}
@@ -860,8 +859,11 @@ class Shader
 							parameter.__isUniform = isUniform;
 							parameter.__length = length;
 
-							if ((parameter.index = location) == -1) __paramBool.remove(parameter);
-							else if (!__paramBool.contains(parameter)) __paramBool.push(parameter);
+							if (__paramBool != null)
+							{
+								if ((parameter.index = location) == -1) __paramBool.remove(parameter);
+								else if (!__paramBool.contains(parameter)) __paramBool.push(parameter);
+							}
 							return;// register(parameter);
 						}
 					case INT, INT2, INT3, INT4, INTV, INT2V, INT3V, INT4V:
@@ -873,8 +875,11 @@ class Shader
 							parameter.__isUniform = isUniform;
 							parameter.__length = length;
 
-							if ((parameter.index = location) == -1) __paramInt.remove(parameter);
-							else if (!__paramInt.contains(parameter)) __paramInt.push(parameter);
+							if (__paramInt != null)
+							{
+								if ((parameter.index = location) == -1) __paramInt.remove(parameter);
+								else if (!__paramInt.contains(parameter)) __paramInt.push(parameter);
+							}
 							return;// register(parameter);
 						}
 					default:
@@ -886,8 +891,11 @@ class Shader
 							parameter.__isUniform = isUniform;
 							parameter.__length = length;
 
-							if ((parameter.index = location) == -1) __paramFloat.remove(parameter);
-							else if (!__paramFloat.contains(parameter)) __paramFloat.push(parameter);
+							if (__paramFloat != null)
+							{
+								if ((parameter.index = location) == -1) __paramFloat.remove(parameter);
+								else if (!__paramFloat.contains(parameter)) __paramFloat.push(parameter);
+							}
 							return;// register(parameter);
 						}
 				}
@@ -907,8 +915,11 @@ class Shader
 				default:
 			}
 
-			if ((input.index = location) == -1) __inputBitmapData.remove(input);
-			else if (!__inputBitmapData.contains(input)) __inputBitmapData.push(input);
+			if (__inputBitmapData != null)
+			{
+				if ((input.index = location) == -1) __inputBitmapData.remove(input);
+				else if (!__inputBitmapData.contains(input)) __inputBitmapData.push(input);
+			}
 			register(input);
 		}
 		else
@@ -930,8 +941,11 @@ class Shader
 						__hasColorTransform = parameter;
 					}
 
-					if ((parameter.index = location) == -1) __paramBool.remove(parameter);
-					else if (!__paramBool.contains(parameter)) __paramBool.push(parameter);
+					if (__paramBool != null)
+					{
+						if ((parameter.index = location) == -1) __paramBool.remove(parameter);
+						else if (!__paramBool.contains(parameter)) __paramBool.push(parameter);
+					}
 					register(parameter);
 
 				case INT, INT2, INT3, INT4, INTV, INT2V, INT3V, INT4V:
@@ -944,8 +958,11 @@ class Shader
 					parameter.__isUniform = isUniform;
 					parameter.__length = length;
 
-					if ((parameter.index = location) == -1) __paramInt.remove(parameter);
-					else if (!__paramInt.contains(parameter)) __paramInt.push(parameter);
+					if (__paramInt != null)
+					{
+						if ((parameter.index = location) == -1) __paramInt.remove(parameter);
+						else if (!__paramInt.contains(parameter)) __paramInt.push(parameter);
+					}
 					register(parameter);
 
 				default:
@@ -973,8 +990,11 @@ class Shader
 						default:
 					}
 
-					if ((parameter.index = location) == -1) __paramFloat.remove(parameter);
-					else if (!__paramFloat.contains(parameter)) __paramFloat.push(parameter);
+					if (__paramFloat != null)
+					{
+						if ((parameter.index = location) == -1) __paramFloat.remove(parameter);
+						else if (!__paramFloat.contains(parameter)) __paramFloat.push(parameter);
+					}
 					register(parameter);
 			}
 		}

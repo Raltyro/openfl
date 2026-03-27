@@ -1704,7 +1704,6 @@ import js.html.CanvasRenderingContext2D;
 
 		if (px > __bounds.x && py > __bounds.y && __bounds.contains(px, py))
 		{
-			/*
 			if (shapeFlag)
 			{
 				#if (js && html5)
@@ -1713,7 +1712,6 @@ import js.html.CanvasRenderingContext2D;
 				return CairoGraphics.hitTest(this, px, py);
 				#end
 			}
-			*/
 
 			return true;
 		}
